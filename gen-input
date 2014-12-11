@@ -1,20 +1,48 @@
 #!/bin/bash
 
-TMP_FILE="tmp.html"
+# This application will prepare an input file for downloading .xm-files
 
-if [ "$1" = "" ]; then
-	echo "You have to give a link to the source";
-	exit 1;
-elif [ "$1" = "-h" ]; then
+TMP_FILE="tmp.html"
+URL=""
+EXT=""
+
+function print_help {
 	echo "
+gen-input is a utility for creating an input file containing links for 
+scraper to use.
+
 Usage:
-	$ gen-input \"http://example.com/some-path.html\"
+	-u) Url
+	-e) File extension of interest
+	-h) This help page
 ";
-	exit;
+}
+
+function generate_input_file {
+	curl "$URL" > "$TMP_FILE"
+	grep -e "http.*\.$EXT" "$TMP_FILE" > "2$TMP_FILE" 
+	mv "2$TMP_FILE" "$TMP_FILE"
+	sed 's/.*href="//g' "$TMP_FILE" | sed 's/".*//g' > input
+	rm "$TMP_FILE"
+}
+
+while getopts hu:e: option; do
+	case ${option} in
+		u) URL="$OPTARG";;
+		e) EXT="$OPTARG";;
+		h) print_help; exit;;
+	esac
+done
+
+if [ "$URL" = "" ]; then
+	echo "You have to give a url to download the raw html from";
+	exit 1;
 fi
 
-curl "$1" > "$TMP_FILE"
-grep -e 'http.*\.xm' "$TMP_FILE" > "2$TMP_FILE" 
-mv "2$TMP_FILE" "$TMP_FILE"
-sed 's/.*href="//g' "$TMP_FILE" | sed 's/".*//g' > input
-rm "$TMP_FILE"
+if [ "$EXT" = "" ]; then
+	echo "You have to give a file extension";
+	exit 1;
+fi
+
+generate_input_file;
+echo "Done!";
