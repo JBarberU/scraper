@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Prepare an imput file with gen-input 
+IN_FILE=""
+OUT_DIR=""
+
+function print_help {
+	echo "
+Scraper is a commandline utility for downloading files from a public webserver,
+mainly intended to remove the need for manually downloading every file you want.
+
+Usage:
+	-i) The input file
+	-o) The output directory
+	-h) This page
+";	
+}
+
+function download {
+	TMP_INP="$(cat "$IN_FILE")"
+	cd "$OUT_DIR";
+	for line in $(echo "$TMP_INP"); do
+		f_name="$(echo "$line" | sed 's,.*\#,,g')";
+		curl "$line" > "$f_name";
+	done
+	cd -;
+}
+
+# Parse options
+while getopts hi:o: option
+do
+	case ${option} in
+		i) IN_FILE="$OPTARG";;
+		o) OUT_DIR="$OPTARG";;
+		h) print_help; exit;;
+	esac
+done
+
+if [ "$IN_FILE" = "" ]; then
+	echo "You have to supply an input file (-i someFile)";
+	exit 1;
+fi
+
+if [ "$OUT_DIR" = "" ]; then
+	echo "You have to supply an output directory (-o someDir)";
+	exit 1;
+fi
+
