@@ -1,5 +1,12 @@
 #!/bin/bash
 
+BOLD="\033[1m"
+NORMAL="\033[0m"
+RED="\033[31m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+BLUE="\033[34m"
+
 # Prepare an imput file with gen-input 
 IN_FILE=""
 OUT_DIR=""
@@ -12,26 +19,41 @@ mainly intended to remove the need for manually downloading every file you want.
 Usage:
 	-i) The input file
 	-o) The output directory
+	-s) Run scraper silently
 	-h) This page
 ";	
 }
 
 function download {
 	TMP_INP="$(cat "$IN_FILE")"
+	PREV_LOC="$(pwd)"
 	cd "$OUT_DIR";
 	for line in $(echo "$TMP_INP"); do
 		f_name="$(echo "$line" | sed 's,.*\#,,g')";
-		curl "$line" > "$f_name";
+		if [ ! -f "$f_name" ]; then
+			curl -s "$line" > "$f_name";
+			if [ ! $SILENT ]; then
+				printf "$GREEN.$NORMAL";
+			fi
+		else
+			if [ ! $SILENT ]; then
+				printf "$BLUE.$NORMAL";
+			fi
+		fi
 	done
-	cd -;
+	if [ ! $SILENT ]; then
+		printf "\n";
+	fi
+	cd "$PREV_LOC";
 }
 
 # Parse options
-while getopts hi:o: option
+while getopts shi:o: option
 do
 	case ${option} in
 		i) IN_FILE="$OPTARG";;
 		o) OUT_DIR="$OPTARG";;
+		s) SILENT=true;;
 		h) print_help; exit;;
 	esac
 done
@@ -46,4 +68,8 @@ if [ "$OUT_DIR" = "" ]; then
 	exit 1;
 fi
 
+if [ ! $SILENT ]; then
+	printf "Downloading $(wc -l "$IN_FILE" | awk '{print $1}') files\n";
+	printf "$GREEN.$NORMAL = downloaded, $BLUE.$NORMAL = ignored (file already exists)\n";
+fi
 download;

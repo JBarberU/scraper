@@ -7,6 +7,7 @@ mainly intended to remove the need for manually downloading every file you want.
 ```bash
 -i) The input file
 -o) The output directory
+-s) Run scraper silently
 -h) This page
 ```
 ## License
