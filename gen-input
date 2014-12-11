@@ -14,22 +14,24 @@ scraper to use.
 Usage:
 	-u) Url
 	-e) File extension of interest
+	-s) Run silently
 	-h) This help page
 ";
 }
 
 function generate_input_file {
-	curl "$URL" > "$TMP_FILE"
+	curl -s "$URL" > "$TMP_FILE"
 	grep -e "http.*\.$EXT" "$TMP_FILE" > "2$TMP_FILE" 
 	mv "2$TMP_FILE" "$TMP_FILE"
-	sed 's/.*href="//g' "$TMP_FILE" | sed 's/".*//g' > input
+	sed 's/.*href="//g' "$TMP_FILE" | sed 's/".*//g' >> input
 	rm "$TMP_FILE"
 }
 
-while getopts hu:e: option; do
+while getopts shu:e: option; do
 	case ${option} in
 		u) URL="$OPTARG";;
 		e) EXT="$OPTARG";;
+		s) SILENT=true;;
 		h) print_help; exit;;
 	esac
 done
@@ -45,4 +47,6 @@ if [ "$EXT" = "" ]; then
 fi
 
 generate_input_file;
-echo "Done!";
+if [ ! $SILENT ]; then
+	echo "Done!";
+fi
