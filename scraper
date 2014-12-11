@@ -46,3 +46,4 @@ if [ "$OUT_DIR" = "" ]; then
 	exit 1;
 fi
 
+download;
